@@ -406,10 +406,8 @@ const empData = [
 // ลบรายการซ้ำ
 const EMP = empData.filter(e=>!e._dup).map(e => ({
   ...e,
-  // เปลี่ยนจากเดิมที่เป็นแค่ชื่อไฟล์ ให้เติมคำว่า "images/" นำหน้า
-img: e.img ? `images/${e.img}` : DEFAULT_IMG
+  img: imageExt[e.id] ? `images/${e.id}.${imageExt[e.id]}` : null
 }));
-
 let q='', filter='all', sortMode=0, viewMode='list';
 let currentTab = 'dir';
 
