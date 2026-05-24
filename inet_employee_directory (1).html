@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>INET · IDC-3 Directory</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-gradient: linear-gradient(145deg, #4b928b 0%, #68b4aa 35%, #9bd8c6 70%, #ebd08d 100%);
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  --text-main: #1a2c38;
+  --text-muted: #4a6572;
+  --accent-dark: #233446;
+  --accent-light: rgba(255, 255, 255, 0.8);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; font-family: 'Prompt', sans-serif; background: var(--bg-gradient); color: var(--text-main); overscroll-behavior: none; }
+.app { display: flex; flex-direction: column; height: 100dvh; max-width: 430px; margin: 0 auto; overflow: hidden; background: var(--bg-gradient); box-shadow: 0 0 30px rgba(0,0,0,0.2); position: relative; }
+
+/* TOP BAR */
+.topbar { background: rgba(255,255,255,0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--glass-border); flex-shrink: 0; position: relative; padding: env(safe-area-inset-top,0) 0 0; z-index: 10; }
+.topbar-inner { padding: 16px 20px 12px; }
+.tb-row1 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; animation: pulse 2s infinite; box-shadow: 0 0 10px #fff; }
+@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.8; } }
+.brand-name { color: var(--accent-dark); font-size: 1.3rem; font-weight: 700; letter-spacing: 2px; }
+.tb-sub { color: var(--text-muted); font-size: 0.75rem; font-weight: 500; }
+.badge-wrap { display: flex; gap: 6px; align-items: center; }
+.badge { background: var(--accent-dark); border-radius: 12px; color: #fff; font-size: 0.7rem; padding: 4px 10px; font-weight: 600; }
+
+/* TAB NAV */
+.tab-nav { display: flex; gap: 0; padding: 0 20px 12px; }
+.tab-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 10px; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-main); font-family: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: 0.2s; backdrop-filter: blur(8px); }
+.tab-btn:first-child { border-radius: 12px 0 0 12px; border-right: none; }
+.tab-btn:last-child { border-radius: 0 12px 12px 0; }
+.tab-btn.active { background: var(--accent-dark); color: #fff; border-color: var(--accent-dark); }
+
+/* search */
+.search-wrap { position: relative; }
+.search-wrap input { width: 100%; padding: 12px 16px 12px 42px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 14px; color: var(--text-main); font-family: inherit; font-size: 0.9rem; outline: none; transition: 0.2s; }
+.search-wrap input::placeholder { color: rgba(26, 44, 56, 0.5); }
+.search-wrap input:focus { background: rgba(255,255,255,0.7); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.si { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+.sc { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: var(--accent-dark); border: none; border-radius: 50%; width: 22px; height: 22px; color: #fff; font-size: 0.8rem; cursor: pointer; display: none; align-items: center; justify-content: center; }
+
+/* FILTER BAR */
+.fbar { flex-shrink: 0; padding: 14px 20px; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; }
+.fbar::-webkit-scrollbar { display: none; }
+.fb { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-main); font-family: inherit; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: 0.2s; white-space: nowrap; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.fb.active { background: var(--accent-dark); color: #fff; border-color: var(--accent-dark); box-shadow: 0 4px 12px rgba(35, 52, 70, 0.2); }
+
+/* SORT ROW */
+.srow { flex-shrink: 0; padding: 0 20px 10px; display: flex; align-items: center; justify-content: space-between; }
+.rcount { font-size: 0.8rem; color: var(--text-main); font-weight: 600; }
+.sbtn { display: flex; align-items: center; gap: 6px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 6px 12px; font-family: inherit; font-size: 0.75rem; color: var(--text-main); font-weight: 600; cursor: pointer; backdrop-filter: blur(4px); }
+
+/* LIST */
+.list { flex: 1; overflow-y: auto; padding: 0 20px 100px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.list::-webkit-scrollbar { display: none; }
+
+/* CARD */
+.card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; box-shadow: var(--glass-shadow); margin-bottom: 14px; overflow: hidden; animation: up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+@keyframes up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.card:active { transform: scale(0.98); }
+.card-hd { display: flex; align-items: center; gap: 14px; padding: 14px 16px 12px; position: relative; }
+.avatar { width: 64px; height: 64px; border-radius: 18px; overflow: hidden; border: 2.5px solid #fff; flex-shrink: 0; background: var(--accent-light); position: relative; z-index: 1; box-shadow: 0 6px 16px rgba(0,0,0,0.13); }
+.avatar img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.avatar-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: var(--accent-dark); background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.3)); }
+.hd-txt { flex: 1; min-width: 0; }
+.hd-name { color: var(--text-main); font-size: 1rem; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hd-en { color: var(--text-muted); font-size: 0.73rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.hd-idbadge { background: rgba(255,255,255,0.6); border: 1px solid #fff; border-radius: 8px; padding: 4px 8px; color: var(--accent-dark); font-size: 0.65rem; font-weight: 700; flex-shrink: 0; }
+.card-bd { padding: 0 16px 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.5); border: 1px solid #fff; border-radius: 10px; padding: 5px 10px; font-size: 0.75rem; color: var(--accent-dark); font-weight: 500; }
+.acts { display: flex; gap: 10px; }
+.abtn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 12px; border: 1px solid var(--glass-border); font-family: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.15s; }
+.abtn:active { transform: scale(0.95); }
+.a-call { background: var(--accent-dark); color: #fff; border: none; }
+.a-mail { background: rgba(255,255,255,0.7); color: var(--accent-dark); }
+.a-prof { background: transparent; color: var(--accent-dark); }
+.abtn.disabled { opacity: 0.4; pointer-events: none; }
+
+/* GRID VIEW for directory */
+.grid-list { flex: 1; overflow-y: auto; padding: 0 16px 100px; scrollbar-width: none; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-content: start; }
+.grid-list::-webkit-scrollbar { display: none; }
+.grid-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; box-shadow: var(--glass-shadow); overflow: hidden; animation: up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; cursor: pointer; transition: transform 0.2s; backdrop-filter: blur(12px); padding: 16px 12px 14px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.grid-card:active { transform: scale(0.97); }
+.grid-avatar { width: 80px; height: 80px; border-radius: 20px; overflow: hidden; border: 3px solid #fff; flex-shrink: 0; background: var(--accent-light); box-shadow: 0 6px 18px rgba(0,0,0,0.15); margin-bottom: 10px; }
+.grid-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.grid-name { font-size: 0.85rem; font-weight: 700; color: var(--text-main); line-height: 1.3; margin-bottom: 4px; }
+.grid-pos { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; margin-bottom: 6px; line-height: 1.3; }
+.grid-id { font-size: 0.62rem; font-weight: 700; color: var(--accent-dark); background: rgba(255,255,255,0.6); border-radius: 6px; padding: 2px 7px; border: 1px solid #fff; }
+
+/* VIEW TOGGLE */
+.view-toggle { display: flex; gap: 4px; }
+.vbtn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-main); cursor: pointer; transition: 0.2s; }
+.vbtn.active { background: var(--accent-dark); color: #fff; border-color: var(--accent-dark); }
+
+/* DETAIL SHEET */
+.overlay { position: fixed; inset: 0; background: rgba(0, 20, 30, 0.4); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; z-index: 100; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+.overlay.open { opacity: 1; pointer-events: auto; }
+.sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%); width: 100%; max-width: 430px; background: rgba(255,255,255,0.9); border-radius: 30px 30px 0 0; z-index: 101; transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1); max-height: 90dvh; display: flex; flex-direction: column; padding-bottom: env(safe-area-inset-bottom,0); box-shadow: 0 -10px 40px rgba(0,0,0,0.15); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid #fff; }
+.sheet.open { transform: translateX(-50%) translateY(0); }
+.sh-handle { width: 40px; height: 5px; background: rgba(0,0,0,0.15); border-radius: 3px; margin: 14px auto 0; flex-shrink: 0; }
+.sh-scroll { overflow-y: auto; flex: 1; padding: 0 24px 30px; scrollbar-width: none; }
+.sh-scroll::-webkit-scrollbar { display: none; }
+.sh-photo { width: 120px; height: 120px; border-radius: 28px; overflow: hidden; margin: 20px auto 14px; border: 4px solid #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.14); cursor: zoom-in; position: relative; }
+.sh-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top center; transition: transform 0.2s; }
+.sh-photo:hover img { transform: scale(1.04); }
+.sh-photo::after { content: '⤢'; position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.5); color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; pointer-events: none; backdrop-filter: blur(4px); }
+.sh-name { text-align: center; font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
+.sh-name-en { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; }
+.sh-pos-badge { display: block; width: fit-content; background: var(--accent-dark); color: #fff; border-radius: 14px; padding: 6px 18px; font-size: 0.8rem; font-weight: 500; margin: 0 auto 24px; box-shadow: 0 4px 12px rgba(35,52,70,0.2); }
+.sh-sec { margin-bottom: 20px; }
+.sh-sec-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; padding-left: 4px; }
+.sh-row { display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: rgba(255,255,255,0.6); border: 1px solid #fff; border-radius: 16px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+.sh-row:active { transform: scale(0.98); background: #fff; }
+.sh-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #fff; }
+.ic1 { background: linear-gradient(135deg, #233446, #3a5068); }
+.ic2 { background: linear-gradient(135deg, #4b928b, #68b4aa); }
+.ic3 { background: linear-gradient(135deg, #ebd08d, #d4a84b); }
+.sh-rtxt { flex: 1; min-width: 0; }
+.sh-rlabel { font-size: 0.7rem; color: var(--text-muted); font-weight: 500; margin-bottom: 2px; }
+.sh-rval { font-size: 0.9rem; color: var(--text-main); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-chev { color: var(--text-muted); flex-shrink: 0; opacity: 0.5; }
+.sh-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+.sab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 14px 10px; border-radius: 16px; border: 1px solid var(--glass-border); font-family: inherit; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.sab:active { transform: scale(0.95); }
+.sab-call { background: var(--accent-dark); color: #fff; border: none; }
+.sab-mail { background: #fff; color: var(--accent-dark); }
+.sab-copy { background: rgba(255,255,255,0.5); color: var(--text-main); }
+
+/* EMPTY */
+.empty { text-align: center; padding: 60px 20px; color: var(--text-main); }
+.empty svg { opacity: 0.5; margin-bottom: 16px; width: 48px; height: 48px; }
+.empty p { font-size: 1rem; font-weight: 500; }
+
+/* FAB */
+.fab { position: fixed; bottom: calc(24px + env(safe-area-inset-bottom,0)); right: 50%; transform: translateX(calc(50% + 170px)); width: 52px; height: 52px; border-radius: 50%; background: var(--accent-dark); color: #fff; border: 2px solid #fff; box-shadow: 0 8px 24px rgba(35,52,70,0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; z-index: 50; }
+.fab:active { transform: translateX(calc(50% + 170px)) scale(0.9); }
+
+/* TOAST */
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(26,44,56,0.9); color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; opacity: 0; transition: all 0.3s ease; pointer-events: none; white-space: nowrap; z-index: 200; box-shadow: 0 8px 24px rgba(0,0,0,0.2); backdrop-filter: blur(8px); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* IMAGE VIEWER */
+.image-viewer { position: fixed; inset: 0; background: rgba(5,15,25,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.image-viewer.open { opacity: 1; pointer-events: auto; }
+.iv-img-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+.image-viewer img { max-width: 85vw; max-height: 72vh; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); transform: scale(0.88); transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275); object-fit: contain; border: 3px solid rgba(255,255,255,0.15); }
+.image-viewer.open img { transform: scale(1); }
+.iv-name { color: rgba(255,255,255,0.9); font-size: 1rem; font-weight: 600; margin-top: 18px; text-align: center; }
+.iv-id { color: rgba(255,255,255,0.5); font-size: 0.8rem; margin-top: 4px; }
+.iv-close { position: absolute; top: 20px; right: 20px; width: 44px; height: 44px; background: rgba(255,255,255,0.12); border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2); }
+.iv-close:active { background: rgba(255,255,255,0.25); transform: scale(0.9); }
+
+/* ===== DASHBOARD ===== */
+.page { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+.page.active { display: flex; }
+
+.dashboard { flex: 1; overflow-y: auto; padding: 0 16px 100px; scrollbar-width: none; }
+.dashboard::-webkit-scrollbar { display: none; }
+
+.dash-hero { background: rgba(255,255,255,0.3); border: 1px solid var(--glass-border); border-radius: 24px; padding: 20px; margin-bottom: 16px; backdrop-filter: blur(12px); text-align: center; position: relative; overflow: hidden; }
+.dash-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%); pointer-events: none; }
+.dash-total { font-size: 3.2rem; font-weight: 700; color: var(--accent-dark); line-height: 1; }
+.dash-total-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+.dash-mini-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 16px; }
+.dash-mini { background: rgba(255,255,255,0.4); border-radius: 14px; padding: 12px 8px; text-align: center; border: 1px solid #fff; }
+.dash-mini-num { font-size: 1.5rem; font-weight: 700; color: var(--accent-dark); }
+.dash-mini-lbl { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; line-height: 1.3; }
+
+.dash-section-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin: 20px 0 12px 4px; }
+
+/* Bar chart */
+.bar-chart { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px; backdrop-filter: blur(12px); margin-bottom: 16px; }
+.bar-title { font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 16px; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.bar-label { font-size: 0.72rem; font-weight: 600; color: var(--text-main); width: 100px; flex-shrink: 0; line-height: 1.3; }
+.bar-track { flex: 1; height: 28px; background: rgba(255,255,255,0.4); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.6); position: relative; }
+.bar-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; transition: width 1s cubic-bezier(0.4,0,0.2,1); position: relative; overflow: hidden; }
+.bar-fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 100%); }
+.bar-count { font-size: 0.7rem; font-weight: 700; color: #fff; position: relative; z-index: 1; }
+.bar-pct { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; width: 36px; text-align: right; }
+
+/* Donut chart */
+.donut-wrap { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px; backdrop-filter: blur(12px); margin-bottom: 16px; }
+.donut-inner { display: flex; align-items: center; gap: 16px; }
+.donut-svg-wrap { flex-shrink: 0; position: relative; width: 130px; height: 130px; }
+.donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.donut-cnum { font-size: 1.8rem; font-weight: 700; color: var(--accent-dark); line-height: 1; }
+.donut-clbl { font-size: 0.6rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+.legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.leg-item { display: flex; align-items: center; gap: 8px; }
+.leg-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.leg-text { font-size: 0.72rem; color: var(--text-main); font-weight: 500; flex: 1; line-height: 1.3; }
+.leg-n { font-size: 0.72rem; font-weight: 700; color: var(--accent-dark); }
+
+/* Top faces */
+.top-faces { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px; backdrop-filter: blur(12px); margin-bottom: 16px; }
+.faces-row { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+.faces-row::-webkit-scrollbar { display: none; }
+.face-item { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+.face-av { width: 56px; height: 56px; border-radius: 14px; overflow: hidden; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.face-av img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.face-av .avatar-placeholder { font-size: 1rem; }
+.face-name { font-size: 0.62rem; font-weight: 600; color: var(--text-main); max-width: 60px; text-align: center; line-height: 1.3; }
+.face-pos { font-size: 0.58rem; color: var(--text-muted); max-width: 60px; text-align: center; }
+
+/* colors for bars/donut */
+.c1 { background: linear-gradient(90deg, #233446, #3a5068); }
+.c2 { background: linear-gradient(90deg, #4b928b, #68b4aa); }
+.c3 { background: linear-gradient(90deg, #ebd08d, #d4a84b); }
+.c4 { background: linear-gradient(90deg, #7db8b4, #9bd8c6); }
+.c5 { background: linear-gradient(90deg, #9b8ea0, #c4b5c8); }
+.c6 { background: linear-gradient(90deg, #d4907a, #e8b09a); }
+.c7 { background: linear-gradient(90deg, #7a9bb8, #9ab8d4); }
+
+/* === ORG TREE === */
+.tree-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 18px 14px 18px; backdrop-filter: blur(12px); margin-bottom: 16px; }
+.tree-wrap { display: flex; flex-direction: column; align-items: center; }
+.tree-root-level, .tree-level { display: flex; justify-content: center; }
+.tree-vline { width: 2px; height: 20px; background: rgba(35,52,70,0.25); margin: 0 auto; border-radius: 2px; }
+.tree-node { display: flex; align-items: center; gap: 10px; background: var(--accent-dark); color: #fff; border-radius: 16px; padding: 10px 14px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 4px 16px rgba(35,52,70,0.25); }
+.tree-node:active { transform: scale(0.97); }
+.tree-node-root { background: linear-gradient(135deg, #1a2c38, #2e4a5e); }
+.tree-node-deputy { background: linear-gradient(135deg, #233446, #3a5a72); }
+.tree-av { width: 44px; height: 44px; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,0.3); flex-shrink: 0; background: rgba(255,255,255,0.15); }
+.tree-av img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.tree-av .avatar-placeholder { font-size: 0.9rem; color: #fff; background: rgba(255,255,255,0.15); }
+.tree-info .tree-name { font-size: 0.85rem; font-weight: 600; color: #fff; line-height: 1.3; }
+.tree-info .tree-pos { font-size: 0.68rem; color: rgba(255,255,255,0.65); margin-top: 2px; }
+.tree-groups-row { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; justify-content: center; }
+.tree-group { background: rgba(255,255,255,0.4); border: 1.5px solid rgba(255,255,255,0.6); border-radius: 16px; overflow: hidden; flex: 1; min-width: 120px; max-width: 160px; transition: box-shadow 0.2s; }
+.tree-group:not(.collapsed) { box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+.tree-group-header { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 8px 8px; cursor: pointer; border-top: 3.5px solid var(--gc, #4b928b); position: relative; user-select: none; }
+.tree-group-header:active { background: rgba(255,255,255,0.3); }
+.tree-group-avatars { display: flex; }
+.tree-gav { width: 28px; height: 28px; border-radius: 8px; overflow: hidden; border: 1.5px solid #fff; background: rgba(255,255,255,0.5); margin-left: -5px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+.tree-gav:first-child { margin-left: 0; }
+.tree-gav img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.tree-gav .avatar-placeholder { font-size: 0.55rem; color: var(--accent-dark); }
+.tree-gav-more { display: flex; align-items: center; justify-content: center; background: var(--accent-dark); color: #fff; font-size: 0.55rem; font-weight: 700; border-radius: 8px; }
+.tree-group-label { font-size: 0.72rem; font-weight: 700; color: var(--text-main); line-height: 1.3; text-align: center; }
+.tree-group-count { font-size: 0.62rem; color: var(--text-muted); margin-top: 1px; text-align: center; }
+.tree-group-chevron { font-size: 0.7rem; color: var(--text-muted); line-height: 1; }
+.tree-members { padding: 8px 8px 10px; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid rgba(255,255,255,0.5); }
+.tree-member { display: flex; align-items: center; gap: 7px; padding: 4px 5px; border-radius: 10px; cursor: pointer; transition: background 0.15s; }
+.tree-member:active { background: rgba(255,255,255,0.5); }
+.tree-mav { width: 32px; height: 32px; border-radius: 9px; overflow: hidden; border: 1.5px solid #fff; flex-shrink: 0; background: rgba(255,255,255,0.5); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+.tree-mav img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.tree-mav .avatar-placeholder { font-size: 0.65rem; color: var(--accent-dark); }
+.tree-mname { font-size: 0.7rem; font-weight: 600; color: var(--text-main); line-height: 1.3; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="tb-row1">
+        <div class="brand"><div class="brand-dot"></div><span class="brand-name">INET</span></div>
+        <span class="tb-sub">IDC-3 · Employee Directory</span>
+        <div class="badge-wrap"><span class="badge" id="badge-total">— คน</span></div>
+      </div>
+      <div class="tab-nav">
+        <button class="tab-btn active" id="tab-dir" onclick="switchTab('dir')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
+          รายชื่อ
+        </button>
+        <button class="tab-btn" id="tab-dash" onclick="switchTab('dash')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </button>
+      </div>
+      <div id="dir-search-wrap">
+        <div class="search-wrap">
+          <svg class="si" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="search" placeholder="ค้นหาชื่อ ตำแหน่ง หรือรหัส…">
+          <button class="sc" id="sc">✕</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Directory Page -->
+  <div class="page active" id="page-dir">
+    <div class="fbar" id="fbar">
+      <button class="fb active" data-filter="all">ทั้งหมด</button>
+      <button class="fb" data-filter="ผู้ช่วยผู้อำนวยการ">ผู้ช่วยผอ.</button>
+      <button class="fb" data-filter="รองผู้จัดการ">รองผู้จัดการ</button>
+      <button class="fb" data-filter="วิศวกรไฟฟ้า">วิศวกรไฟฟ้า</button>
+      <button class="fb" data-filter="วิศวกรคอมพิวเตอร์">วิศวกร IT</button>
+      <button class="fb" data-filter="เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์">เจ้าหน้าที่ฯ</button>
+      <button class="fb" data-filter="เจ้าหน้าที่ขุมชนสัมพันธ์">CSR</button>
+      <button class="fb" data-filter="ช่างซ่อมบำรุงอาคาร">ช่างอาคาร</button>
+    </div>
+    <div class="srow">
+      <span class="rcount" id="rcount">แสดง — คน</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="view-toggle">
+          <button class="vbtn active" id="vbtn-list" onclick="setView('list')" title="List view">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          </button>
+          <button class="vbtn" id="vbtn-grid" onclick="setView('grid')" title="Grid view">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </button>
+        </div>
+        <button class="sbtn" id="sbtn">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
+          <span id="slabel">ชื่อ ก→ฮ</span>
+        </button>
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="grid-list" id="grid-list" style="display:none"></div>
+  </div>
+
+  <!-- Dashboard Page -->
+  <div class="page" id="page-dash">
+    <div class="dashboard" id="dashboard"></div>
+  </div>
+</div>
+
+<button class="fab" id="fab"><svg width="20" height="20" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg></button>
+<div class="overlay" id="overlay"></div>
+<div class="sheet" id="sheet"><div class="sh-handle"></div><div class="sh-scroll" id="shc"></div></div>
+<div class="toast" id="toast"></div>
+
+<div class="image-viewer" id="imgViewer">
+  <div class="iv-close" id="ivClose">✕</div>
+  <div class="iv-img-wrap">
+    <img id="ivImg" src="" alt="">
+  </div>
+  <div class="iv-name" id="ivName"></div>
+  <div class="iv-id" id="ivId"></div>
+</div>
+
+<script>
+const imageExt = {
+  "OD1158037": "png","OD1158048": "png","OD1159070": "png","OD1159216": "png",
+  "OD1159220": "png","OD1159247": "png","OD1159279": "png","OD1160081": "png",
+  "OD1160082": "png","OD1160088": "png","OD1160351": "png","OD1160406": "png",
+  "OD1161069": "png","OD1161078": "png","OD1161079": "png","OD1161092": "png",
+  "OD1161125": "png","OD1161134": "png","OD1161280": "png","OD1161363": "png",
+  "OD1161392": "png","OD1162007": "png","OD1162045": "png","OD1162046": "png",
+  "OD1162099": "png","OD1162130": "png","OD1162131": "png","OD1162151": "png",
+  "OD1162154": "png","OD1162203": "png","OD1162404": "png","OD1162769": "png",
+  "OD1165002": "png","OD1165005": "png","OD1165007": "png","OD1166001": "png",
+  "OD1167009": "png","OD1169007": "png","OD1159247": "png","OD1160082": "png",
+  "OD1159279": "png","OD1160081": "png","OD1160088": "png"
+};
+
+const empData = [
+  // ผู้บริหาร
+  { id:"OD1158037", name:"นายพฤตินัย ล่ำสูง (กอล์ฟ)", nameEn:"Mr. Pruktinail Lamsoong", pos:"ผู้ช่วยผู้อำนวยการ", posEn:"Assistant Director", phone:"081 937 6638", email:"pruktinail@inet.co.th" },
+  { id:"OD1161092", name:"นายธีรวัฒน์ ถินคำเชิด (ธีร์)", nameEn:"Mr. Teerawat Thinkamcherd", pos:"รองผู้จัดการ", posEn:"Deputy Manager", phone:"061 417 4979", email:"teerawat.th@inet.co.th" },
+  // วิศวกรไฟฟ้า
+  { id:"OD1159070", name:"นายขจรศักดิ์ ทับสน (พัท)", nameEn:"Mr. Kajornsak Thupson", pos:"วิศวกรไฟฟ้า", posEn:"Electrical Engineer", phone:"063 217 3464", email:"kajornsak.th@inet.co.th" },
+  { id:"OD1159220", name:"นายกฤษณพงศ์ เขียวกลาง(ไกด์)", nameEn:"Mr. Kritsanapong Khiaowklang", pos:"วิศวกรไฟฟ้า", posEn:"Electrical Engineer", phone:"", email:"kritsanapong.kh@inet.co.th" },
+  { id:"OD1159247", name:"นายอดิศร ผลรักษ์ (หนุ่ม)", nameEn:"Mr. Adison Pholrak", pos:"วิศวกรไฟฟ้า", posEn:"Electrical Engineer", phone:"063 217 6173", email:"adison.ph@inet.co.th" },
+  { id:"OD1161125", name:"นายศุภชัย ช่วยสุข (แบงค์)", nameEn:"Mr. Supachai Chouysok", pos:"วิศวกรไฟฟ้า", posEn:"Electrical Engineer", phone:"063 268 8029", email:"supachai.ch@inet.co.th" },
+  { id:"OD1162007", name:"นายอาทิตย์ โชติปรีดาเศรษฐ์ (แบงค์)", nameEn:"Mr. Athit Chotpreedaset", pos:"วิศวกรไฟฟ้า", posEn:"Electrical Engineer", phone:"065 527 2090", email:"athit.ma@inet.co.th" },
+  { id:"OD1166001", name:"นายพุฒิพงษ์ แก่นจันทร์ (เบนซ์)", nameEn:"Mr. Puthipong Kaenjan", pos:"วิศวกรไฟฟ้า", posEn:"Electrical Engineer", phone:"063 219 1172", email:"puthipong.ka@inet.co.th" },
+  // วิศวกรคอมพิวเตอร์
+  { id:"OD1160082", name:"นายปิติพงษ์ ราชพิลา (อ๊อฟ)", nameEn:"Mr. Pitipong Rachpila", pos:"วิศวกรคอมพิวเตอร์", posEn:"Computer Engineer", phone:"063 204 9800", email:"pitipong.ra@inet.co.th" },
+  // เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์
+  { id:"OD1158048", name:"ว่าที่ร้อยตรีวีรศักดิ์ แปลลา (วี)", nameEn:"Acting Sub Lt. Werasak Plaela", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"092 262 0118", email:"werasakp@inet.co.th" },
+  { id:"OD1159216", name:"นายนิพล พรมน้ำ (ทู)", nameEn:"Mr. Nipon Promnarm", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"", email:"nipon.pr@inet.co.th" },
+  { id:"OD1159279", name:"นายชัยชนะ บุญสุข (นิค)", nameEn:"Mr. Chaichana Bunsuk", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"063 204 9765", email:"chaichana.bu@inet.co.th" },
+  { id:"OD1160081", name:"นายกฤษณะ เรืองโหรา (นุ๊ก)", nameEn:"Mr. Kritsana Rueanghora", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"063 204 9799", email:"kritsana.ru@inet.co.th" },
+  { id:"OD1160088", name:"นายสุพจน์ ไทรไกรกระ (ตั้ม)", nameEn:"Mr. Suphot Thaikaikra", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"063 204 9801", email:"suphot.th@inet.co.th" },
+  { id:"OD1160351", name:"นางสาวจงกล แก้วมาลา (นิว)", nameEn:"Ms. Jongkon Kaewmala", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"065 521 4469", email:"jongkon.ka@inet.co.th" },
+  { id:"OD1160406", name:"นายเอกรัตน์ ยอดด่านกลาง (แซม)", nameEn:"Mr. Ekkarat Yoddanklang", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"065 725 7455", email:"ekkarat.yo@inet.co.th" },
+  { id:"OD1161069", name:"นายวิชญ์ภาส สืบพงศ์ (หมอก)", nameEn:"Mr. Witchaphat Suepphong", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"061 410 3453", email:"witchaphat.su@inet.co.th" },
+  { id:"OD1161078", name:"นายพีรพัฒน์ โพธิ์จิตร (อั๋น)", nameEn:"Mr. Peerapat Phochit", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"061 410 6213", email:"peerapat.ph@inet.co.th" },
+  { id:"OD1161079", name:"นายนัทธพงศ์ ชมภูเจริญ (แนน)", nameEn:"Mr. Nuttapong Chompucharoen", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"063 268 6703", email:"nuttapong.ch@inet.co.th" },
+  { id:"OD1161134", name:"นายพิชิตพนธ์ สิมมา (นก)", nameEn:"Mr. Pichitpon Simma", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"098 280 7256", email:"pichitpon.si@inet.co.th" },
+  { id:"OD1161280", name:"นางสาวณัฐชยา พรรณโณภาศ (คุกกี้)", nameEn:"Ms. Natchaya Pannopas", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"063 197 8503", email:"natchaya.pa@inet.co.th" },
+  { id:"OD1161363", name:"นายอภิสิทธิ์ จำมั่น (แมท)", nameEn:"Mr. Apisit Jummun", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"065 512 4657", email:"apisit.ju@inet.co.th" },
+  { id:"OD1161392", name:"นายชินวัฒน์ แสงบุญเรือง (แชมป์)", nameEn:"Mr. Chinnawat Saengbunrueang", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"092 250 6903", email:"chinnawat.sa@inet.co.th" },
+  { id:"OD1162045", name:"นายธนพงษ์ แก้วปัดชา (ตุ่ม)", nameEn:"Mr. Thanapong Kaewpatcha", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"065 513 4096", email:"thanapong.ka@inet.co.th" },
+  { id:"OD1162099", name:"นายศักดิ์ชัย เกตกลางดอน (มนต์)", nameEn:"Mr. Sakchai Ketklangdon", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"065 504 8320", email:"sakchai.ke@inet.co.th" },
+  { id:"OD1162130", name:"นายพศพล ย้อยจันทึก (เปิ้ล)", nameEn:"Mr. Possapol Yoichanthuek", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"065 512 4631", email:"possapol.yo@inet.co.th" },
+  { id:"OD1162131", name:"นายพิชิต แท่งทอง (แจ็ค)", nameEn:"Mr. Pichit Tangtong", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"065 507 5538", email:"pichit.ta@inet.co.th" },
+  { id:"OD1162154", name:"นายสมคิด เกษสุริยงค์ (คิด)", nameEn:"Mr. Somkid Katesuiyong", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"065 527 1971", email:"somkid.ka@inet.co.th" },
+  { id:"OD1162203", name:"นางสาวกัญญาภัค กิจนาค (สตางค์)", nameEn:"Ms. Kanyapak Kidnark", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"065 527 2503", email:"kanyapak.ki@inet.co.th" },
+  { id:"OD1162769", name:"นายพงศธร ศรีสวัสดิ์โชคชัย (แบงค์)", nameEn:"Mr. Pongsatorn Srisawatchokchai", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"063 217 6123", email:"pongsatorn.sr@inet.co.th" },
+  { id:"OD1165005", name:"นายนภัส กาษร (ปอ)", nameEn:"Mr. Naphat Kasorn", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"092 250 6379", email:"naphat.ka@inet.co.th" },
+  { id:"OD1165007", name:"นายสุวัฒน์ อุ่นสุข (บอส)", nameEn:"Mr. Suwat Oonsuk", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"065 937 7191", email:"suwat.oo@inet.co.th" },
+  { id:"OD1167009", name:"นายธนพร แก้วปัดชา (ตาม)", nameEn:"Mr. Thanaporn Kaewpadcha", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"065 527 2021", email:"thanaporn.ka@inet.co.th" },
+  { id:"OD1169007", name:"นายกิตตินันท์ มณีวงษ์ (ฟลุ๊ค)", nameEn:"Mr. Kittinun Maneewong", pos:"เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์", posEn:"Data Center Officer", phone:"093 124 1271", email:"kittinun.ma@inet.co.th" },
+  // CSR
+  { id:"OD1162404", name:"นางสาวรัตติยากร เงินแก้ว (เอ้)", nameEn:"Ms. Rattiyakorn Nguenkaew", pos:"เจ้าหน้าที่ขุมชนสัมพันธ์", posEn:"Community Relations Officer", phone:"065 523 1713", email:"rattiyakorn.ng@inet.co.th" },
+  { id:"OD1165002", name:"นางสาวชนนิกานต์ วงพิมล (กีฟ)", nameEn:"Ms. Chonnikarn Wongphimol", pos:"เจ้าหน้าที่ขุมชนสัมพันธ์", posEn:"Community Relations Officer", phone:"061 398 7469", email:"chonnikarn.wo@inet.co.th" },
+  // ช่างซ่อมบำรุงอาคาร
+  { id:"OD1162151", name:"นายอิทธิพล พันธุ์ชื่น (มอส)", nameEn:"Mr. Ittiphon Phunchuen", pos:"ช่างซ่อมบำรุงอาคาร", posEn:"Building Maintenance Technician", phone:"065 527 1964", email:"ittiphon.ph@inet.co.th" },
+  // เพิ่มเติมจากรูป image 6 (ไม่มีรูป IDC-3 ส่วนงานฝ่ายพัฒนาธุรกิจ Data Center)
+  { id:"OD1159247x", name:"นายอดิศร ผลรักษ์ (หนุ่ม)", nameEn:"Mr. Adison Pholrak", pos:"วิศวกรไฟฟ้า", posEn:"Electrical Engineer", phone:"063 217 6173", email:"adison.ph@inet.co.th", _dup:true }
+];
+
+// ลบรายการซ้ำ
+const EMP = empData.filter(e=>!e._dup).map(e => ({
+  ...e,
+  // เปลี่ยนจากเดิมที่เป็นแค่ชื่อไฟล์ ให้เติมคำว่า "images/" นำหน้า
+img: e.img ? `images/${e.img}` : DEFAULT_IMG
+}));
+
+let q='', filter='all', sortMode=0, viewMode='list';
+let currentTab = 'dir';
+
+// === AVATAR ===
+const DEFAULT_INITIALS = e => {
+  const parts = (e.nameEn||e.name).replace(/^(Mr\.|Ms\.|Mrs\.|Acting Sub Lt\.)\s*/i,'').trim().split(' ');
+  return (parts[0]?.[0]||'?') + (parts[1]?.[0]||'');
+};
+
+function avatarHtml(e, size=64){
+  if(e.img) return `<img src="${e.img}" alt="${e.name}" loading="lazy" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><div class="avatar-placeholder" style="display:none">${DEFAULT_INITIALS(e)}</div>`;
+  return `<div class="avatar-placeholder">${DEFAULT_INITIALS(e)}</div>`;
+}
+
+// === FILTER / SORT ===
+function filtered(){
+  let list=EMP.filter(e=>{
+    const qq=q.toLowerCase();
+    const mq=!qq||e.name.includes(qq)||(e.nameEn||'').toLowerCase().includes(qq)||e.id.toLowerCase().includes(qq)||e.pos.includes(qq);
+    const posKey = e.pos.replace(/\s+/g,' ').trim();
+    const mf=filter==='all'||posKey===filter||e.pos.startsWith(filter);
+    return mq&&mf;
+  });
+  const sorts=[
+    (a,b)=>a.name.localeCompare(b.name,'th'),
+    (a,b)=>b.name.localeCompare(a.name,'th'),
+    (a,b)=>a.id.localeCompare(b.id)
+  ];
+  list.sort(sorts[sortMode]);
+  return list;
+}
+
+// === RENDER LIST ===
+function render(){
+  const list=filtered();
+  document.getElementById('rcount').textContent='แสดง '+list.length+' คน';
+  document.getElementById('badge-total').textContent=EMP.length+' คน';
+
+  if(viewMode==='list'){
+    document.getElementById('list').style.display='';
+    document.getElementById('grid-list').style.display='none';
+    const container=document.getElementById('list');
+    if(!list.length){ container.innerHTML=`<div class="empty"><svg width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>ไม่พบพนักงาน</p></div>`; return; }
+    container.innerHTML=list.map((e,i)=>`
+      <div class="card" style="animation-delay:${i*0.03}s" onclick="openSheet('${e.id}')">
+        <div class="card-hd">
+          <div class="avatar">${avatarHtml(e,64)}</div>
+          <div class="hd-txt">
+            <div class="hd-name">${e.name}</div>
+            <div class="hd-en">${e.nameEn||''}</div>
+          </div>
+          <div class="hd-idbadge">${e.id}</div>
+        </div>
+        <div class="card-bd">
+          <div class="chips">
+            <div class="chip"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>${e.pos}</div>
+            <div class="chip"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>IDC-3</div>
+          </div>
+          <div class="acts">
+            <button class="abtn a-call${!e.phone?' disabled':''}" onclick="event.stopPropagation();callPhone('${e.phone||''}')">
+              <svg width="12" height="12" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.33A2 2 0 0 1 3.6 1.19h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>โทร
+            </button>
+            <button class="abtn a-mail" onclick="event.stopPropagation();sendEmail('${e.email}')">
+              <svg width="12" height="12" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>อีเมล
+            </button>
+            <button class="abtn a-prof" onclick="event.stopPropagation();openSheet('${e.id}')">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-1a6 6 0 0 1 12 0v1"/></svg>โปรไฟล์
+            </button>
+          </div>
+        </div>
+      </div>`).join('');
+  } else {
+    document.getElementById('list').style.display='none';
+    document.getElementById('grid-list').style.display='';
+    const container=document.getElementById('grid-list');
+    if(!list.length){ container.innerHTML=`<div class="empty" style="grid-column:1/-1"><svg width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>ไม่พบพนักงาน</p></div>`; return; }
+    container.innerHTML=list.map((e,i)=>`
+      <div class="grid-card" style="animation-delay:${i*0.03}s" onclick="openSheet('${e.id}')">
+        <div class="grid-avatar">${avatarHtml(e,80)}</div>
+        <div class="grid-name">${e.name.replace(/\s*\(.*\)\s*/,'')}</div>
+        <div class="grid-pos">${e.pos}</div>
+        <div class="grid-id">${e.id}</div>
+      </div>`).join('');
+  }
+}
+
+// === DETAIL SHEET ===
+function openSheet(id){
+  const e=EMP.find(x=>x.id===id);
+  if(!e)return;
+  document.getElementById('shc').innerHTML=`
+    <div class="sh-photo" onclick="openImageViewer('${e.img||''}','${e.name}','${e.id}')">${avatarHtml(e,120)}</div>
+    <div class="sh-name">${e.name}</div>
+    <div class="sh-name-en">${e.nameEn||''}</div>
+    <div class="sh-pos-badge">${e.pos}</div>
+    <div class="sh-sec">
+      <div class="sh-sec-title">ข้อมูลพนักงาน</div>
+      <div class="sh-row" style="cursor:default">
+        <div class="sh-icon ic1"><svg width="13" height="13" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3"/><path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8"/></svg></div>
+        <div class="sh-rtxt"><div class="sh-rlabel">รหัสพนักงาน</div><div class="sh-rval">${e.id}</div></div>
+      </div>
+      <div class="sh-row" style="cursor:default">
+        <div class="sh-icon ic2"><svg width="13" height="13" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+        <div class="sh-rtxt"><div class="sh-rlabel">ตำแหน่ง</div><div class="sh-rval">${e.pos} · ${e.posEn||''}</div></div>
+      </div>
+      <div class="sh-row" style="cursor:default">
+        <div class="sh-icon ic3"><svg width="13" height="13" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+        <div class="sh-rtxt"><div class="sh-rlabel">ส่วนงาน</div><div class="sh-rval">IDC-3 · ฝ่ายพัฒนาธุรกิจ Data Center</div></div>
+      </div>
+    </div>
+    <div class="sh-sec">
+      <div class="sh-sec-title">ช่องทางติดต่อ</div>
+      ${e.phone?`<div class="sh-row" onclick="callPhone('${e.phone}')">
+        <div class="sh-icon ic2"><svg width="13" height="13" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.33A2 2 0 0 1 3.6 1.19h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg></div>
+        <div class="sh-rtxt"><div class="sh-rlabel">โทรศัพท์</div><div class="sh-rval">${e.phone}</div></div>
+        <svg class="sh-chev" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>`:'<div class="sh-row" style="cursor:default;opacity:.5"><div class="sh-icon ic2"><svg width="13" height="13" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.33A2 2 0 0 1 3.6 1.19h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg></div><div class="sh-rtxt"><div class="sh-rlabel">โทรศัพท์</div><div class="sh-rval">ยังไม่มีข้อมูล</div></div></div>'}
+      <div class="sh-row" onclick="sendEmail('${e.email}')">
+        <div class="sh-icon ic3"><svg width="13" height="13" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+        <div class="sh-rtxt"><div class="sh-rlabel">อีเมล (@inet)</div><div class="sh-rval">${e.email}</div></div>
+        <svg class="sh-chev" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+    <div class="sh-acts">
+      <button class="sab sab-call${!e.phone?' disabled':''}" onclick="${e.phone?`callPhone('${e.phone}')`:''}" ${!e.phone?'disabled':''}>
+        <svg width="19" height="19" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.33A2 2 0 0 1 3.6 1.19h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.02z"/></svg>
+        โทรออก
+      </button>
+      <button class="sab sab-mail" onclick="sendEmail('${e.email}')">
+        <svg width="19" height="19" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        ส่งอีเมล
+      </button>
+      <button class="sab sab-copy" onclick="copyText('${e.id}','รหัส ${e.id}')">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        คัดลอก ID
+      </button>
+      <button class="sab sab-copy" onclick="copyText('${e.email}','อีเมล')">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        คัดลอกอีเมล
+      </button>
+    </div>
+  `;
+  document.getElementById('sheet').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeSheet(){ document.getElementById('sheet').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+
+// === IMAGE VIEWER ===
+function openImageViewer(src, name, id){
+  if(!src){ showToast('ไม่มีรูปภาพ'); return; }
+  document.getElementById('ivImg').src=src;
+  document.getElementById('ivName').textContent=name;
+  document.getElementById('ivId').textContent=id;
+  document.getElementById('imgViewer').classList.add('open');
+}
+function closeImageViewer(){ document.getElementById('imgViewer').classList.remove('open'); }
+document.getElementById('ivClose').addEventListener('click', closeImageViewer);
+document.getElementById('imgViewer').addEventListener('click', function(e){ if(e.target===this) closeImageViewer(); });
+
+// === DASHBOARD ===
+const POS_COLORS = [
+  { key:'ผู้ช่วยผู้อำนวยการ', label:'ผู้ช่วยผอ.', cls:'c1' },
+  { key:'รองผู้จัดการ', label:'รองผู้จัดการ', cls:'c2' },
+  { key:'วิศวกรไฟฟ้า', label:'วิศวกรไฟฟ้า', cls:'c3' },
+  { key:'วิศวกรคอมพิวเตอร์', label:'วิศวกร IT', cls:'c7' },
+  { key:'เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์', label:'เจ้าหน้าที่ฯ', cls:'c4' },
+  { key:'เจ้าหน้าที่ขุมชนสัมพันธ์', label:'CSR', cls:'c5' },
+  { key:'ช่างซ่อมบำรุงอาคาร', label:'ช่างอาคาร', cls:'c6' },
+];
+
+function renderDashboard(){
+  const total=EMP.length;
+  const byPos = POS_COLORS.map(p => ({
+    ...p,
+    count: EMP.filter(e=>e.pos===p.key||e.pos.startsWith(p.key)).length
+  })).filter(p=>p.count>0);
+  const maxCount = Math.max(...byPos.map(p=>p.count));
+
+  const withPhone = EMP.filter(e=>e.phone).length;
+  const withImg = EMP.filter(e=>e.img).length;
+  const female = EMP.filter(e=>e.name.includes('นางสาว')||e.name.includes('นาง ')).length;
+
+  // Build donut SVG
+  const r=52, cx=65, cy=65, circ=2*Math.PI*r;
+  let offset=0;
+  const segments = byPos.map(p => {
+    const seg = { ...p, pct: p.count/total, start: offset };
+    offset += seg.pct;
+    return seg;
+  });
+  const segColors = ['#233446','#4b928b','#ebd08d','#7a9bb8','#7db8b4','#9b8ea0','#d4907a'];
+  const donutSegments = segments.map((s,i)=>{
+    const dashArr = s.pct*circ;
+    const dashOff = circ*(1-s.start) - (i===0?0:0);
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${segColors[i%segColors.length]}" stroke-width="18" stroke-dasharray="${dashArr} ${circ-dashArr}" stroke-dashoffset="${circ*(1-s.start)}" transform="rotate(-90 ${cx} ${cy})" style="transition:stroke-dasharray 1.2s ease"/>`;
+  }).join('');
+
+  const legHTML = byPos.map((p,i)=>`
+    <div class="leg-item">
+      <div class="leg-dot" style="background:${segColors[i%segColors.length]}"></div>
+      <span class="leg-text">${p.label}</span>
+      <span class="leg-n">${p.count}</span>
+    </div>`).join('');
+
+  const barsHTML = byPos.map((p,i)=>`
+    <div class="bar-row">
+      <div class="bar-label">${p.label}</div>
+      <div class="bar-track">
+        <div class="bar-fill ${p.cls}" style="width:${Math.round(p.count/maxCount*100)}%">
+          <span class="bar-count">${p.count}</span>
+        </div>
+      </div>
+      <div class="bar-pct">${Math.round(p.count/total*100)}%</div>
+    </div>`).join('');
+
+  // === ORG TREE ===
+  // Tree node definition — collapse/expand groups
+  const treeData = {
+    id:'OD1158037',
+    children:[{
+      id:'OD1161092',
+      children:[
+        { group:'วิศวกรไฟฟ้า', label:'วิศวกรไฟฟ้า', color:'#ebd08d', ids:['OD1159070','OD1159247','OD1161125','OD1162007','OD1166001'] },
+        { group:'วิศวกรคอมพิวเตอร์', label:'วิศวกร IT', color:'#7a9bb8', ids:['OD1160082'] },
+        { group:'เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์', label:'เจ้าหน้าที่ฯ', color:'#7db8b4', ids:EMP.filter(e=>e.pos==='เจ้าหน้าที่ดูแลศูนย์ข้อมูลคอมพิวเตอร์').map(e=>e.id) },
+        { group:'เจ้าหน้าที่ขุมชนสัมพันธ์', label:'CSR', color:'#9b8ea0', ids:['OD1162404','OD1165002'] },
+        { group:'ช่างซ่อมบำรุงอาคาร', label:'ช่างอาคาร', color:'#d4907a', ids:['OD1162151'] },
+      ]
+    }]
+  };
+
+  // collapsed groups state
+  window._treeCollapsed = window._treeCollapsed || {};
+
+  function shortName(e){ return e.name.replace(/^(นาย|นางสาว|นาง|ว่าที่ร้อยตรี)\s*/,'').replace(/\s*\(.*?\)\s*/g,'').trim().split(' ').slice(0,2).join(' '); }
+  function getEmp(id){ return EMP.find(e=>e.id===id); }
+
+  function buildTree(){
+    const root = getEmp(treeData.id);
+    const deputy = getEmp(treeData.children[0].id);
+    const groups = treeData.children[0].children;
+
+    let html = `<div class="tree-wrap">`;
+
+    // Root node
+    html += `<div class="tree-level tree-root-level">
+      <div class="tree-node tree-node-root" onclick="switchTab('dir');setTimeout(()=>openSheet('${root.id}'),300)">
+        <div class="tree-av">${avatarHtml(root,44)}</div>
+        <div class="tree-info">
+          <div class="tree-name">${shortName(root)}</div>
+          <div class="tree-pos">ผู้ช่วยผอ.</div>
+        </div>
+      </div>
+    </div>`;
+
+    // connector
+    html += `<div class="tree-vline"></div>`;
+
+    // Deputy node
+    html += `<div class="tree-level">
+      <div class="tree-node tree-node-deputy" onclick="switchTab('dir');setTimeout(()=>openSheet('${deputy.id}'),300)">
+        <div class="tree-av">${avatarHtml(deputy,40)}</div>
+        <div class="tree-info">
+          <div class="tree-name">${shortName(deputy)}</div>
+          <div class="tree-pos">รองผู้จัดการ</div>
+        </div>
+      </div>
+    </div>`;
+
+    html += `<div class="tree-vline"></div>`;
+
+    // Groups row
+    html += `<div class="tree-groups-row">`;
+    groups.forEach((g,gi) => {
+      const collapsed = !!window._treeCollapsed[g.group];
+      const members = g.ids.map(id=>getEmp(id)).filter(Boolean);
+      const preview = members.slice(0,3);
+      html += `<div class="tree-group${collapsed?' collapsed':''}">
+        <div class="tree-group-header" style="--gc:${g.color}" onclick="toggleGroup('${g.group}')">
+          <div class="tree-group-avatars">
+            ${preview.map(e=>`<div class="tree-gav">${avatarHtml(e,28)}</div>`).join('')}
+            ${members.length>3?`<div class="tree-gav tree-gav-more">+${members.length-3}</div>`:''}
+          </div>
+          <div class="tree-group-info">
+            <div class="tree-group-label">${g.label}</div>
+            <div class="tree-group-count">${members.length} คน</div>
+          </div>
+          <div class="tree-group-chevron">${collapsed?'▸':'▾'}</div>
+        </div>
+        ${!collapsed ? `<div class="tree-members">
+          ${members.map(e=>`<div class="tree-member" onclick="event.stopPropagation();switchTab('dir');setTimeout(()=>openSheet('${e.id}'),300)">
+            <div class="tree-mav">${avatarHtml(e,32)}</div>
+            <div class="tree-mname">${shortName(e)}</div>
+          </div>`).join('')}
+        </div>` : ''}
+      </div>`;
+    });
+    html += `</div>`;
+    html += `</div>`;
+    return html;
+  }
+
+  window.toggleGroup = function(groupKey){
+    window._treeCollapsed[groupKey] = !window._treeCollapsed[groupKey];
+    document.getElementById('org-tree-container').innerHTML = buildTree();
+  };
+
+  document.getElementById('dashboard').innerHTML = `
+    <div style="height:12px"></div>
+    <div class="dash-hero">
+      <div class="dash-total">${total}</div>
+      <div class="dash-total-label">พนักงานทั้งหมด ส่วนงาน IDC-3</div>
+      <div class="dash-mini-row">
+        <div class="dash-mini"><div class="dash-mini-num">${withPhone}</div><div class="dash-mini-lbl">มีเบอร์โทร</div></div>
+        <div class="dash-mini"><div class="dash-mini-num">${withImg}</div><div class="dash-mini-lbl">มีรูปโปรไฟล์</div></div>
+        <div class="dash-mini"><div class="dash-mini-num">${female}</div><div class="dash-mini-lbl">พนักงานหญิง</div></div>
+      </div>
+    </div>
+
+    <div class="dash-section-title">สัดส่วนตำแหน่ง</div>
+    <div class="donut-wrap">
+      <div class="bar-title">จำนวนพนักงานตามตำแหน่ง</div>
+      <div class="donut-inner">
+        <div class="donut-svg-wrap">
+          <svg width="130" height="130" viewBox="0 0 130 130">${donutSegments}</svg>
+          <div class="donut-center">
+            <div class="donut-cnum">${total}</div>
+            <div class="donut-clbl">คน</div>
+          </div>
+        </div>
+        <div class="legend">${legHTML}</div>
+      </div>
+    </div>
+
+    <div class="dash-section-title">จำนวนตามตำแหน่ง</div>
+    <div class="bar-chart">
+      <div class="bar-title">Bar Chart · จำนวนพนักงาน</div>
+      ${barsHTML}
+    </div>
+
+    <div class="dash-section-title">ทีมงานหลัก · โครงสร้างองค์กร</div>
+    <div class="tree-card">
+      <div id="org-tree-container"></div>
+    </div>
+  `;
+  document.getElementById('org-tree-container').innerHTML = buildTree();
+}
+
+// === TAB SWITCH ===
+function switchTab(tab){
+  currentTab=tab;
+  document.getElementById('tab-dir').classList.toggle('active', tab==='dir');
+  document.getElementById('tab-dash').classList.toggle('active', tab==='dash');
+  document.getElementById('page-dir').classList.toggle('active', tab==='dir');
+  document.getElementById('page-dash').classList.toggle('active', tab==='dash');
+  document.getElementById('dir-search-wrap').style.display = tab==='dir'?'':'none';
+  if(tab==='dash') renderDashboard();
+}
+
+// === VIEW MODE ===
+function setView(v){
+  viewMode=v;
+  document.getElementById('vbtn-list').classList.toggle('active', v==='list');
+  document.getElementById('vbtn-grid').classList.toggle('active', v==='grid');
+  render();
+}
+
+// === UTILITY ===
+function callPhone(p){ if(p) window.location.href='tel:'+p.replace(/\s/g,''); }
+function sendEmail(e){ window.location.href='mailto:'+e; }
+function copyText(txt,label){ navigator.clipboard.writeText(txt).then(()=>showToast('คัดลอก'+label+'แล้ว')).catch(()=>showToast('คัดลอกไม่สำเร็จ')); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+// === EVENTS ===
+document.getElementById('search').addEventListener('input',function(){ q=this.value; document.getElementById('sc').style.display=q?'flex':'none'; render(); });
+document.getElementById('sc').addEventListener('click',function(){ document.getElementById('search').value=''; q=''; this.style.display='none'; render(); });
+document.querySelectorAll('.fb').forEach(b=>b.addEventListener('click',function(){ document.querySelectorAll('.fb').forEach(x=>x.classList.remove('active')); this.classList.add('active'); filter=this.dataset.filter; render(); }));
+const sortLabels=['ชื่อ ก→ฮ','ชื่อ ฮ→ก','รหัส A→Z'];
+document.getElementById('sbtn').addEventListener('click',function(){ sortMode=(sortMode+1)%3; document.getElementById('slabel').textContent=sortLabels[sortMode]; render(); });
+document.getElementById('overlay').addEventListener('click',closeSheet);
+document.getElementById('fab').addEventListener('click',()=>{
+  if(currentTab==='dir'){
+    (viewMode==='list'?document.getElementById('list'):document.getElementById('grid-list')).scrollTo({top:0,behavior:'smooth'});
+  } else {
+    document.getElementById('dashboard').scrollTo({top:0,behavior:'smooth'});
+  }
+});
+let sy=0;
+document.getElementById('sheet').addEventListener('touchstart',e=>{sy=e.touches[0].clientY});
+document.getElementById('sheet').addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-sy>55)closeSheet()});
+
+render();
+</script>
+</body>
+</html>
